@@ -6,6 +6,7 @@ import { createProduct } from "../../../functions/product";
 import ProductCreateForm from "../../../components/forms/ProductCreateForm";
 import { getCategories, getCategorySubs } from "../../../functions/category";
 import FileUpload from "../../../components/forms/FileUpload";
+import { LoadingOutlined } from "@ant-design/icons";
 
 const initialState = {
   title: "",
@@ -75,7 +76,11 @@ const ProductCreate = () => {
         </div>
 
         <div className="col-md-10">
-          <h4>Product Create</h4>
+          {loading ? (
+            <LoadingOutlined className="text-danger" />
+          ) : (
+            <h4>Product Create</h4>
+          )}
           <hr />
 
           <div className="p-3">
