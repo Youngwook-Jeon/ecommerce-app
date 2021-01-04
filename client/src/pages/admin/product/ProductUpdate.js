@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import AdminNav from "../../../components/nav/AdminNav";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
-import { getProduct } from "../../../functions/product";
+import { getProduct, updateProduct } from "../../../functions/product";
 import { getCategories, getCategorySubs } from "../../../functions/category";
 import FileUpload from "../../../components/forms/FileUpload";
 import { LoadingOutlined } from "@ant-design/icons";
-import ProductUpdateForm from '../../../components/forms/ProductUpdateForm';
+import ProductUpdateForm from "../../../components/forms/ProductUpdateForm";
 
 const initialState = {
   title: "",
@@ -23,12 +23,13 @@ const initialState = {
   brand: "",
 };
 
-const ProductUpdate = ({ match }) => {
+const ProductUpdate = ({ match, history }) => {
   const [values, setValues] = useState(initialState);
   const [categories, setCategories] = useState([]);
   const [subOptions, setSubOptions] = useState([]);
   const [arrayOfSubs, setArrayOfSubs] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { user } = useSelector((state) => ({ ...state }));
   const { slug } = match.params;
@@ -39,21 +40,19 @@ const ProductUpdate = ({ match }) => {
   }, []);
 
   const loadProduct = () => {
-    getProduct(slug)
-    .then(p => {
+    getProduct(slug).then((p) => {
       setValues({ ...values, ...p.data });
 
-      getCategorySubs(p.data.category._id)
-      .then(res => {
+      getCategorySubs(p.data.category._id).then((res) => {
         setSubOptions(res.data);
       });
-      
+
       let arr = [];
-      p.data.subs.map(s => {
+      p.data.subs.map((s) => {
         arr.push(s._id);
       });
-      setArrayOfSubs(prev => arr);
-    })
+      setArrayOfSubs((prev) => arr);
+    });
   };
 
   const loadCategories = () =>
@@ -61,6 +60,21 @@ const ProductUpdate = ({ match }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    values.subs = arrayOfSubs;
+    values.category = selectedCategory ? selectedCategory : values.category;
+
+    updateProduct(slug, values, user.token)
+    .then(res => {
+      setLoading(false);
+      toast.success(`"${res.data.title}" is updated.`);
+      history.push("/admin/products");
+    }).catch(err => {
+      console.log(err);
+      setLoading(false);
+      toast.error(err.response.data.err);
+    });
   };
 
   const handleChange = (e) => {
@@ -96,9 +110,21 @@ const ProductUpdate = ({ match }) => {
         </div>
 
         <div className="col-md-10">
-          <h4>Product update</h4>
-          
-          <ProductUpdateForm 
+          {loading ? (
+            <LoadingOutlined className="text-danger" />
+          ) : (
+            <h4>Product Update</h4>
+          )}
+
+          <div className="p-3">
+            <FileUpload
+              values={values}
+              setValues={setValues}
+              setLoading={setLoading}
+            />
+          </div>
+
+          <ProductUpdateForm
             handleSubmit={handleSubmit}
             handleChange={handleChange}
             setValues={setValues}
@@ -111,7 +137,6 @@ const ProductUpdate = ({ match }) => {
             selectedCategory={selectedCategory}
           />
           <hr />
-
         </div>
       </div>
     </div>
