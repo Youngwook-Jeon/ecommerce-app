@@ -191,8 +191,51 @@ const handlePrice = async (req, res, price) => {
   }
 };
 
+const handleCategory = async (req, res, category) => {
+  try {
+    let products = await Product.find({ category })
+      .populate("category", "_id name")
+      .populate("subs", "_id name")
+      .populate("postedBy", "_id name")
+      .exec();
+    
+    res.json(products);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const handleStar = (req, res, stars) => {
+  Product.aggregate([
+    {
+      $project: {
+        document: "$$ROOT",
+        floorAverage: {
+          $floor: { $avg: "$ratings.star" }
+        }
+      }
+    },
+    { $match: { floorAverage: stars } }
+  ])
+    .limit(12)
+    .exec((err, aggregates) => {
+      if (err) console.log("Aggregate Error", err);
+
+      Product.find({ _id: aggregates })
+      .populate("category", "_id name")
+      .populate("subs", "_id name")
+      .populate("postedBy", "_id name")
+      .exec((err, products) => {
+        if (err) console.log("Product Aggregate Error", err);
+
+        res.json(products);
+      });
+    });
+
+};
+
 exports.searchFilters = async (req, res) => {
-  const { query, price } = req.body;
+  const { query, price, category, stars } = req.body;
 
   if (query) {
     await handleQuery(req, res, query);
@@ -200,5 +243,13 @@ exports.searchFilters = async (req, res) => {
 
   if (price !== undefined) {
     await handlePrice(req, res, price);
+  }
+
+  if (category) {
+    await handleCategory(req, res, category);
+  }
+
+  if (stars) {
+    await handleStar(req, res, stars);
   }
 };
