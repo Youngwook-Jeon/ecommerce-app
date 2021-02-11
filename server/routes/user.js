@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 
 const router = express.Router();
 
@@ -6,14 +6,23 @@ const router = express.Router();
 const { authCheck } = require("../middlewares/auth");
 
 // controllers
-const { userCart, getUserCart, emptyCart, saveAddress, applyCouponToUserCart } = require("../controllers/user");
+const {
+  userCart,
+  getUserCart,
+  emptyCart,
+  saveAddress,
+  applyCouponToUserCart,
+  createOrder,
+} = require("../controllers/user");
 
-router.post('/user/cart', authCheck, userCart);
-router.get('/user/cart', authCheck, getUserCart);
-router.delete('/user/cart', authCheck, emptyCart);
-router.post('/user/address', authCheck, saveAddress);
+router.post("/user/cart", authCheck, userCart);
+router.get("/user/cart", authCheck, getUserCart);
+router.delete("/user/cart", authCheck, emptyCart);
+router.post("/user/address", authCheck, saveAddress);
+
+router.post("/user/order", authCheck, createOrder);
 
 // coupon
-router.post('/user/cart/coupon', authCheck, applyCouponToUserCart);
+router.post("/user/cart/coupon", authCheck, applyCouponToUserCart);
 
 module.exports = router;
