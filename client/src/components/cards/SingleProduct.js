@@ -11,6 +11,9 @@ import RatingModal from "../modal/RatingModal";
 import { showAverage } from "../../functions/rating";
 import _ from "lodash";
 import { useSelector, useDispatch } from 'react-redux';
+import { addToWishlist } from '../../functions/user';
+import { toast } from "react-toastify";
+import { useHistory } from 'react-router-dom';
 
 const { TabPane } = Tabs;
 
@@ -20,6 +23,7 @@ const SingleProduct = ({ product, onStarClick, star }) => {
 
   const { user, cart } = useSelector(state => ({ ...state }));
   const dispatch = useDispatch();
+  let history = useHistory();
 
   const handleAddtoCart = () => {
     let cart = [];
@@ -52,16 +56,25 @@ const SingleProduct = ({ product, onStarClick, star }) => {
     }
   };
 
+  const handleAddToWishlist = (e) => {
+    e.preventDefault();
+    addToWishlist(product._id, user.token)
+      .then(res => {
+        toast.success('Added to Wishlist');
+        history.push('/user/wishlist');
+      })
+  }
+
   return (
     <div>
       <div className="col-md-7">
         {images && images.length ? (
           <Carousel showArrows={true} autoPlay infiniteLoop>
-            {images && images.map((i) => <img src={i.url} key={i.public_id} />)}
+            {images && images.map((i) => <img src={i.url} key={i.public_id} alt="product" />)}
           </Carousel>
         ) : (
           <Card
-            cover={<img src={Laptop} className="mb-3 card-image" alt="" />}
+            cover={<img src={Laptop} className="mb-3 card-image" alt="default product" />}
           ></Card>
         )}
 
@@ -93,11 +106,11 @@ const SingleProduct = ({ product, onStarClick, star }) => {
                 Add to Cart
               </a>
             </Tooltip>,
-            <Link to="/">
+            <a onClick={handleAddToWishlist}>
               <HeartOutlined className="text-info" />
               <br />
               Add to Wishlist
-            </Link>,
+            </a>,
             <RatingModal>
               <StarRating
                 name={_id}
