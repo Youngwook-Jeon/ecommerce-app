@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { getUserCart, emptyUserCart, saveUserAddress, applyCoupon } from "../functions/user";
+import {
+  getUserCart,
+  emptyUserCart,
+  saveUserAddress,
+  applyCoupon,
+  createCashOrderForUser,
+} from "../functions/user";
 import { toast } from "react-toastify";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 const Checkout = ({ history }) => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => ({ ...state }));
+  const { user, COD } = useSelector((state) => ({ ...state }));
 
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
@@ -64,26 +70,25 @@ const Checkout = ({ history }) => {
   };
 
   const applyDiscountCoupon = () => {
-    applyCoupon(user.token, coupon)
-      .then(res => {
-        if (res.data) {
-          setTotalAfterDiscount(res.data);
-          // update redux coupon applied
-          dispatch({
-            type: "COUPON_APPLIED",
-            payload: true,
-          });
-        }
+    applyCoupon(user.token, coupon).then((res) => {
+      if (res.data) {
+        setTotalAfterDiscount(res.data);
+        // update redux coupon applied
+        dispatch({
+          type: "COUPON_APPLIED",
+          payload: true,
+        });
+      }
 
-        if (res.data.err) {
-          setDiscountError(res.data.err);
-          // update redux coupon applied
-          dispatch({
-            type: "COUPON_APPLIED",
-            payload: false,
-          });
-        }
-      });
+      if (res.data.err) {
+        setDiscountError(res.data.err);
+        // update redux coupon applied
+        dispatch({
+          type: "COUPON_APPLIED",
+          payload: false,
+        });
+      }
+    });
   };
 
   const showAddress = () => (
@@ -116,9 +121,17 @@ const Checkout = ({ history }) => {
         type="text"
         className="form-control"
       />
-      <button onClick={applyDiscountCoupon} className="btn btn-primary mt-2">Apply</button>
+      <button onClick={applyDiscountCoupon} className="btn btn-primary mt-2">
+        Apply
+      </button>
     </div>
   );
+
+  const createCashOrder = () => {
+    createCashOrderForUser(user.token, COD).then(res => {
+      
+    });
+  };
 
   return (
     <div className="row">
@@ -146,18 +159,30 @@ const Checkout = ({ history }) => {
         <p>Cart Total: {total}</p>
 
         {totalAfterDiscount > 0 && (
-          <p className="bg-success p-2">Discount Applied: Total Payable: ${totalAfterDiscount}</p>
+          <p className="bg-success p-2">
+            Discount Applied: Total Payable: ${totalAfterDiscount}
+          </p>
         )}
 
         <div className="row">
           <div className="col-md-6">
-            <button
-              className="btn btn-primary"
-              disabled={!addressSaved || !products.length}
-              onClick={() => history.push("/payment")}
-            >
-              Place Order
-            </button>
+            {COD ? (
+              <button
+                className="btn btn-primary"
+                disabled={!addressSaved || !products.length}
+                onClick={createCashOrder}
+              >
+                Place Order
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                disabled={!addressSaved || !products.length}
+                onClick={() => history.push("/payment")}
+              >
+                Place Order
+              </button>
+            )}
           </div>
 
           <div className="col-md-6">

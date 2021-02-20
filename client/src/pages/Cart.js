@@ -16,31 +16,43 @@ const Cart = ({ history }) => {
 
   const saveOrdertoDb = () => {
     userCart(cart, user.token)
-      .then(res => {
-        if (res.data.ok) history.push('/checkout');
+      .then((res) => {
+        if (res.data.ok) history.push("/checkout");
       })
-      .catch(err => console.log("Save Cart Err", err));
+      .catch((err) => console.log("Save Cart Err", err));
+  };
+
+  const saveCashOrderToDb = () => {
+    dispatch({
+      type: 'COD',
+      payload: true,
+    });
+    userCart(cart, user.token)
+      .then((res) => {
+        if (res.data.ok) history.push("/checkout");
+      })
+      .catch((err) => console.log("Save Cart Err", err));
   };
 
   const showCartItems = () => (
-      <table className="table table-bordered">
-          <thead className="thead-light">
-            <tr>
-                <th scope="col">Image</th>
-                <th scope="col">Title</th>
-                <th scope="col">Price</th>
-                <th scope="col">Brand</th>
-                <th scope="col">Color</th>
-                <th scope="col">Count</th>
-                <th scope="col">Shipping</th>
-                <th scope="col">Remove</th>
-            </tr>
-          </thead>
+    <table className="table table-bordered">
+      <thead className="thead-light">
+        <tr>
+          <th scope="col">Image</th>
+          <th scope="col">Title</th>
+          <th scope="col">Price</th>
+          <th scope="col">Brand</th>
+          <th scope="col">Color</th>
+          <th scope="col">Count</th>
+          <th scope="col">Shipping</th>
+          <th scope="col">Remove</th>
+        </tr>
+      </thead>
 
-          {cart.map(p => (
-              <ProductCardInCheckout key={p._id} product={p} />
-          ))}
-      </table>
+      {cart.map((p) => (
+        <ProductCardInCheckout key={p._id} product={p} />
+      ))}
+    </table>
   );
 
   return (
@@ -71,19 +83,33 @@ const Cart = ({ history }) => {
           Total: <b>${getTotal()}</b>
           <hr />
           {user ? (
-            <button
-              onClick={saveOrdertoDb}
-              className="btn btn-sm btn-primary mt-2"
-              disabled={!cart.length}
-            >
-              Proceed to Checkout
-            </button>
+            <>
+              <button
+                onClick={saveOrdertoDb}
+                className="btn btn-sm btn-primary mt-2"
+                disabled={!cart.length}
+              >
+                Proceed to Checkout
+              </button>
+              <br />
+              <button
+                onClick={saveCashOrderToDb}
+                className="btn btn-sm btn-warning mt-2"
+                disabled={!cart.length}
+              >
+                Pay Cash on Delivery
+              </button>
+            </>
           ) : (
             <button className="btn btn-sm btn-primary mt-2">
-              <Link to={{
+              <Link
+                to={{
                   pathname: "/login",
-                  state: {from: "cart"} //not redux state
-              }}>Login to Checkout</Link>
+                  state: { from: "cart" }, //not redux state
+                }}
+              >
+                Login to Checkout
+              </Link>
             </button>
           )}
         </div>
