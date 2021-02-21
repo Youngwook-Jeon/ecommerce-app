@@ -145,7 +145,7 @@ exports.addToWishlist = async (req, res) => {
   const { productId } = req.body;
   const user = await User.findOneAndUpdate(
     { email: req.user.email },
-    { $addToSet: { wishlist: productId } },
+    { $addToSet: { wishlist: productId } }
   ).exec();
 
   res.json({ ok: true });
@@ -171,25 +171,34 @@ exports.removeFromWishlist = async (req, res) => {
 };
 
 exports.createCashOrder = async (req, res) => {
-  const { COD } = req.body;
+  const { couponApplied, COD } = req.body;
 
-  if (!COD) return res.status(400).send('Create cash order failed');
-  
+  if (!COD) return res.status(400).send("Create cash order failed");
+
   const user = await User.findOne({ email: req.user.email }).exec();
 
   let userCart = await Cart.findOne({ orderedBy: user._id }).exec();
+
+  let finalAmount = 0;
+
+  if (couponApplied && userCart.totalAfterDiscount) {
+    finalAmount = userCart.totalAfterDiscount * 100;
+  } else {
+    finalAmount = userCart.cartTotal * 100;
+  }
 
   let newOrder = await new Order({
     products: userCart.products,
     paymentIntent: {
       id: uniqueid(),
-      amount: userCart.cartTotal,
+      amount: finalAmount,
       currency: "usd",
       status: "Cash On Delivery",
       created: Date.now(),
-      payment_method_types: ['cash']
+      payment_method_types: ["cash"],
     },
     orderedBy: user._id,
+    status: "Cash On Delivery",
   }).save();
 
   let bulkOption = userCart.products.map((item) => {

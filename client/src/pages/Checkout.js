@@ -14,6 +14,7 @@ import "react-quill/dist/quill.snow.css";
 const Checkout = ({ history }) => {
   const dispatch = useDispatch();
   const { user, COD } = useSelector((state) => ({ ...state }));
+  const couponTrueOrFalse = useSelector((state) => state.coupon);
 
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
@@ -128,8 +129,29 @@ const Checkout = ({ history }) => {
   );
 
   const createCashOrder = () => {
-    createCashOrderForUser(user.token, COD).then(res => {
-      
+    createCashOrderForUser(user.token, COD, couponTrueOrFalse).then(res => {
+      if (res.data.ok) {
+        if (typeof window !== 'undefined') localStorage.removeItem('cart');
+
+        dispatch({
+          type: 'ADD_TO_CART',
+          payload: [],
+        });
+
+        dispatch({
+          type: 'COUPON_APPLIED',
+          payload: false,
+        });
+
+        dispatch({
+          type: 'COD',
+          payload: false,
+        });
+        emptyUserCart(user.token);
+        setTimeout(() => {
+          history.push('/user/history');
+        }, 1000);
+      }
     });
   };
 
